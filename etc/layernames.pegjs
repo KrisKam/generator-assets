@@ -46,7 +46,7 @@ defaultspeclist "List of default specification components"
     }
 
 defaultspec "A single default specification component"
-    = whitespace+ size:scale? _ folders:folder* suffix:goodcharsanddots? _ 
+    = whitespace+ size:scale? _ canvassize:compcanvassize? _ folders:folder* suffix:goodcharsanddots? _ 
     & { return size || folders.length > 0 || (suffix && suffix.trim().length > 0)} { // require at least one spec
         var result = {
             "default": true,
@@ -65,6 +65,10 @@ defaultspec "A single default specification component"
         }
 
         mergeSize(size, result);
+        
+        if (canvassize) {
+            result.canvassize = canvassize;
+        }
 
         return result;
     }
@@ -93,7 +97,7 @@ folder "A single folder name that ends with a slash and does not begin with a do
     }
 
 filespec "A size-and-file specification"
-    = _ size:scale? _ folders:folder* filepart:filename _ { // Parsed layer name part
+    = _ size:scale? _ canvassize:compcanvassize? _ folders:folder* filepart:filename _ { // Parsed layer name part
         var result = {
             name: text().trim(),
             file: filepart.filename.replace(/[\\":*?<>!|]/g,'_'),
@@ -109,6 +113,10 @@ filespec "A size-and-file specification"
         }
 
         mergeSize(size, result);
+        
+        if (canvassize) {
+            result.canvassize = canvassize;
+        }
         
         return result;
     }
@@ -203,6 +211,20 @@ abscomp "Absolute scale component, like 100cm"
         return {
             // no unit
         };
+    }
+
+compcanvassize "Component canvas size, either long or short form"
+    = longcanvassize
+    / shortcanvassize
+    
+longcanvassize "Long form component canvas size, like [32x64]"
+    = csize: "[" w:number "x" h:number "]" {
+        return {width: w, height: h};
+    }
+    
+shortcanvassize "short form component canvas size, like [32]"
+    = csize: "[" val:number "]" {
+        return {width: val, height: val};
     }
 
 unit "Unit abbreviation"
